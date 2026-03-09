@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Peta interaktif lokasi UMKM dan destinasi wisata Banyuwangi">
+    <title>Peta — Banyuangi Trip</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .map-page-container {
+            padding-top: 68px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .map-toolbar h2 {
+            font-size: 1.2rem;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .map-toolbar .form-input {
+            max-width: 300px;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+        }
+
+        .map-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        #fullMap {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 32px;
+            left: 16px;
+            z-index: 999;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            max-width: 220px;
+        }
+
+        .map-legend h4 {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .map-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar scrolled" id="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Banyuangi Trip</a>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Beranda</a>
+                <a href="umkm.html">UMKM</a>
+                <a href="peta.html" class="active">Peta</a>
+                <a href="umkm-form.html">+ Tambah UMKM</a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span style="background: var(--text-primary);"></span>
+                <span style="background: var(--text-primary);"></span>
+                <span style="background: var(--text-primary);"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAP PAGE -->
+    <div class="map-page-container">
+        <div class="map-toolbar">
+            <h2>📍 Peta UMKM</h2>
+            <input type="text" class="form-input" id="mapSearch" placeholder="🔍 Cari UMKM di peta...">
+            <span class="map-count" id="mapCount"></span>
+        </div>
+        <div style="position: relative; flex: 1; min-height: 0;">
+            <div id="fullMap" style="height: 100%;"></div>
+            <div class="map-legend">
+                <h4>📍 Legenda</h4>
+                <div class="map-legend-item">
+                    <div class="legend-dot" style="background: #2E7D32;"></div>
+                    <span>Lokasi UMKM</span>
+                </div>
+                <div class="map-legend-item">
+                    <div class="legend-dot" style="background: #FF8F00;"></div>
+                    <span>Destinasi Wisata</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/umkm.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap('fullMap', { scrollWheel: true, zoom: 13 });
+
+            const items = getUmkmList();
+            document.getElementById('mapCount').textContent = `${items.length} UMKM ditemukan`;
+
+            // Search filter for map
+            const searchInput = document.getElementById('mapSearch');
+            let timeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    const keyword = searchInput.value.toLowerCase();
+
+                    // Clear existing markers
+                    markers.forEach(m => map.removeLayer(m));
+                    markers = [];
+
+                    let items = getUmkmList();
+                    if (keyword) {
+                        items = items.filter(i =>
+                            i.nama.toLowerCase().includes(keyword) ||
+                            i.jenisProduk.toLowerCase().includes(keyword)
+                        );
+                    }
+
+                    items.forEach(item => {
+                        if (!item.lat || !item.lng) return;
+                        const icon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="
+                background: #2E7D32;
+                color: white;
+                width: 36px;
+                height: 36px;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                border: 2px solid white;
+              "><span style="transform: rotate(45deg); font-size: 16px;">📍</span></div>`,
+                            iconSize: [36, 36],
+                            iconAnchor: [18, 36],
+                            popupAnchor: [0, -36],
+                        });
+
+                        const marker = L.marker([item.lat, item.lng], { icon })
+                            .addTo(map)
+                            .bindPopup(createPopupContent(item), {
+                                maxWidth: 280,
+                                className: 'custom-popup'
+                            });
+                        markers.push(marker);
+                    });
+
+                    document.getElementById('mapCount').textContent = `${items.length} UMKM ditemukan`;
+
+                    if (markers.length > 1) {
+                        const group = L.featureGroup(markers);
+                        map.fitBounds(group.getBounds().pad(0.1));
+                    }
+                }, 300);
+            });
+        });
+    </script>
+</body>
+
+</html>

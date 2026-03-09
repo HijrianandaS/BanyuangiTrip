@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Banyuangi Trip — Portal wisata dan UMKM desa Banyuwangi. Temukan keindahan alam, budaya, dan produk lokal berkualitas.">
+  <title>Banyuangi Trip — Wisata & UMKM Desa</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-brand">
+        🌿 Banyuangi Trip
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html" class="active">Beranda</a>
+        <a href="#keunggulan">Keunggulan</a>
+        <a href="umkm.html">UMKM</a>
+        <a href="peta.html">Peta</a>
+        <a href="#footer">Kontak</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero" id="hero">
+    <div class="hero-bg" style="background-image: url('images/hero-bg.png');"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🌿 Selamat Datang di Banyuwangi</div>
+      <h1 class="hero-title">Banyuangi Trip</h1>
+      <p class="hero-desc">
+        Temukan keindahan alam, budaya yang kaya, produk UMKM unggulan, dan keramahan masyarakat desa kami. 
+        Jelajahi pesona Banyuwangi melalui wisata alam dan produk lokal berkualitas.
+      </p>
+      <div class="hero-buttons">
+        <a href="umkm.html" class="btn btn-primary btn-lg">Jelajahi UMKM ↗</a>
+        <a href="peta.html" class="btn btn-outline btn-lg">📍 Lihat Peta</a>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <a href="#keunggulan">
+        <span>Scroll ke bawah</span>
+        <span style="font-size: 1.5rem;">↓</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== KEUNGGULAN SECTION ========== -->
+  <section class="section" id="keunggulan">
+    <div class="container">
+      <div class="section-header fade-in">
+        <div class="section-badge">✨ Mengapa Banyuwangi?</div>
+        <h2>Keunggulan Desa Kami</h2>
+        <p>Potensi wisata dan UMKM unggulan yang menanti untuk dijelajahi</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card fade-in">
+          <div class="feature-icon green">🏔️</div>
+          <h3>Wisata Alam</h3>
+          <p>Pemandangan alam yang memukau dari kawah Ijen hingga pantai-pantai indah</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon orange">☕</div>
+          <h3>Kopi Premium</h3>
+          <p>Nikmati kopi robusta berkualitas dari perkebunan di lereng gunung</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon blue">🎭</div>
+          <h3>Budaya Lokal</h3>
+          <p>Kesenian tradisional dan ritual adat yang unik dari suku Osing</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon purple">🛍️</div>
+          <h3>UMKM Unggulan</h3>
+          <p>Produk lokal berkualitas mulai dari kuliner hingga kerajinan tangan</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATISTICS SECTION ========== -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item fade-in">
+          <div class="stat-number" data-target="50" data-suffix="+">0</div>
+          <div class="stat-label">UMKM Terdaftar</div>
+        </div>
+        <div class="stat-item fade-in">
+          <div class="stat-number" data-target="120" data-suffix="+">0</div>
+          <div class="stat-label">Produk Lokal</div>
+        </div>
+        <div class="stat-item fade-in">
+          <div class="stat-number" data-target="500" data-suffix="+">0</div>
+          <div class="stat-label">Pengunjung/Bulan</div>
+        </div>
+        <div class="stat-item fade-in">
+          <div class="stat-number" data-target="4" data-suffix=".8 ★">0</div>
+          <div class="stat-label">Rating Rata-rata</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== UMKM PREVIEW SECTION ========== -->
+  <section class="section" id="umkm-section">
+    <div class="container">
+      <div class="section-header fade-in">
+        <div class="section-badge">🛍️ Produk Unggulan</div>
+        <h2>UMKM Unggulan Desa</h2>
+        <p>Produk dan jasa berkualitas dari pelaku UMKM lokal</p>
+      </div>
+      <div class="umkm-grid" id="umkm-preview"></div>
+      <div style="text-align: center; margin-top: 40px;" class="fade-in">
+        <a href="umkm.html" class="btn btn-primary btn-lg">Lihat Semua UMKM ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== MAP PREVIEW SECTION ========== -->
+  <section class="section" style="background: var(--bg-secondary);" id="map-section">
+    <div class="container">
+      <div class="section-header fade-in">
+        <div class="section-badge">📍 Lokasi</div>
+        <h2>Jelajahi Peta Desa</h2>
+        <p>Temukan lokasi UMKM dan destinasi wisata di Banyuwangi</p>
+      </div>
+      <div class="map-container fade-in" id="homeMap"></div>
+      <div style="text-align: center; margin-top: 32px;" class="fade-in">
+        <a href="peta.html" class="btn btn-primary">Lihat Peta Lengkap ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA SECTION ========== -->
+  <section class="cta-section">
+    <div class="container">
+      <h2 class="fade-in">Punya Produk UMKM Unggulan?</h2>
+      <p class="fade-in">Daftarkan produk UMKM Anda sekarang dan jangkau lebih banyak pelanggan melalui platform kami</p>
+      <a href="umkm-form.html" class="btn btn-outline btn-lg fade-in">+ Daftarkan UMKM Anda</a>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🌿 Banyuangi Trip</h3>
+          <p>Portal wisata dan UMKM desa Banyuwangi. Menampilkan keindahan alam, budaya, dan produk lokal berkualitas dari masyarakat setempat.</p>
+        </div>
+        <div>
+          <h4>Navigasi</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="umkm.html">UMKM</a></li>
+            <li><a href="peta.html">Peta</a></li>
+            <li><a href="umkm-form.html">Daftar UMKM</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Link Terkait</h4>
+          <ul class="footer-links">
+            <li><a href="#">Profil Desa</a></li>
+            <li><a href="#">Berita Desa</a></li>
+            <li><a href="#">Galeri Foto</a></li>
+            <li><a href="#">Agenda Kegiatan</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Hubungi Kami</h4>
+          <ul class="footer-contact">
+            <li><span class="icon">📍</span> Banyuwangi, Jawa Timur, Indonesia</li>
+            <li><span class="icon">📞</span> +62 812 3456 7890</li>
+            <li><span class="icon">✉️</span> info@banyuangitrip.id</li>
+            <li><span class="icon">🕐</span> Senin - Minggu: 08.00 - 17.00</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2025 Banyuangi Trip. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/umkm.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Initialize homepage
+    document.addEventListener('DOMContentLoaded', () => {
+      // Render UMKM preview (limit 3)
+      renderUmkmCards('umkm-preview', 3);
+
+      // Initialize map preview
+      initMap('homeMap', { scrollWheel: false, zoom: 12 });
+    });
+  </script>
+</body>
+</html>

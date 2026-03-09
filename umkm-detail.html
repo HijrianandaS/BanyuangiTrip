@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Detail produk UMKM Banyuwangi">
+    <title>Detail UMKM — Banyuangi Trip</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar scrolled" id="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Banyuangi Trip</a>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Beranda</a>
+                <a href="umkm.html" class="active">UMKM</a>
+                <a href="peta.html">Peta</a>
+                <a href="umkm-form.html">+ Tambah UMKM</a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span style="background: var(--text-primary);"></span>
+                <span style="background: var(--text-primary);"></span>
+                <span style="background: var(--text-primary);"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- DETAIL CONTENT -->
+    <div class="detail-header">
+        <div class="container" id="detail-page">
+            <!-- Rendered by JS -->
+            <div class="empty-state">
+                <div class="icon">⏳</div>
+                <h3>Memuat data...</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/umkm.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/review.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) {
+                window.location.href = 'umkm.html';
+                return;
+            }
+            renderDetailPage(id);
+        });
+
+        function renderDetailPage(id) {
+            const item = getUmkmById(id);
+            const container = document.getElementById('detail-page');
+
+            if (!item) {
+                container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">❌</div>
+            <h3>UMKM Tidak Ditemukan</h3>
+            <p>Data UMKM yang Anda cari tidak tersedia.</p>
+            <a href="umkm.html" class="btn btn-primary" style="margin-top: 16px;">← Kembali ke Daftar</a>
+          </div>
+        `;
+                return;
+            }
+
+            document.title = `${item.nama} — Banyuangi Trip`;
+
+            container.innerHTML = `
+        <!-- Breadcrumb -->
+        <div style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-muted);">
+          <a href="index.html" style="color: var(--primary);">Beranda</a> / 
+          <a href="umkm.html" style="color: var(--primary);">UMKM</a> / 
+          <span>${item.nama}</span>
+        </div>
+
+        <!-- Main Image -->
+        <img src="${item.gambar}" alt="${item.nama}" class="detail-img fade-in" 
+          onerror="this.src='images/umkm-default.png'">
+
+        <!-- Content Grid -->
+        <div class="detail-content">
+          <!-- Left: Main Info -->
+          <div>
+            <div class="detail-info fade-in">
+              <div class="badge-row">
+                <span class="umkm-badge">${item.jenisProduk}</span>
+              </div>
+              <h1 style="font-size: 1.8rem; margin-bottom: 8px;">${item.nama}</h1>
+              <div class="umkm-rating" style="margin-bottom: 20px;">
+                <span class="stars" style="font-size: 1.1rem;">${renderStars(item.rating)}</span>
+                <span class="rating-value" style="font-size: 1rem;">${item.rating}</span>
+                <span class="rating-count">(${item.ulasan.length} ulasan)</span>
+              </div>
+
+              <h3 style="margin-bottom: 8px; margin-top: 24px;">📝 Deskripsi</h3>
+              <p style="margin-bottom: 20px;">${item.deskripsi}</p>
+
+              <h3 style="margin-bottom: 8px;">⭐ Keunggulan</h3>
+              <p style="margin-bottom: 20px;">${item.keunggulan}</p>
+
+              ${item.lat && item.lng ? `
+                <h3 style="margin-bottom: 12px;">📍 Lokasi</h3>
+                <div class="map-container" id="detailMap" style="height: 250px; margin-bottom: 20px;"></div>
+              ` : ''}
+            </div>
+
+            <!-- Reviews -->
+            <div class="fade-in">
+              ${renderReviewSection(id)}
+            </div>
+          </div>
+
+          <!-- Right: Sidebar -->
+          <div class="detail-sidebar">
+            <div class="card fade-in">
+              <p class="umkm-price">${formatPrice(item.harga)}</p>
+              <div class="umkm-rating" style="margin-bottom: 20px;">
+                <span class="stars">${renderStars(item.rating)}</span>
+                <span class="rating-value">${item.rating}</span>
+              </div>
+              <a href="https://wa.me/6281234567890?text=Halo, saya tertarik dengan produk ${encodeURIComponent(item.nama)}" 
+                target="_blank" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
+                💬 Hubungi via WhatsApp
+              </a>
+              <a href="umkm-form.html?id=${item.id}" class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">
+                ✏️ Edit UMKM
+              </a>
+              <button onclick="showDeleteModal('${item.id}', '${item.nama}')" class="btn btn-danger" style="width: 100%;">
+                🗑️ Hapus UMKM
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+            // Init mini map
+            if (item.lat && item.lng) {
+                setTimeout(() => {
+                    const miniMap = L.map('detailMap', { scrollWheelZoom: false }).setView([item.lat, item.lng], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap',
+                        maxZoom: 19,
+                    }).addTo(miniMap);
+                    L.marker([item.lat, item.lng]).addTo(miniMap);
+                    setTimeout(() => miniMap.invalidateSize(), 200);
+                }, 100);
+            }
+
+            initScrollAnimations();
+        }
+    </script>
+</body>
+
+</html>
