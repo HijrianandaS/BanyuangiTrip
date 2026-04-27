@@ -1,94 +1,87 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Detail produk UMKM Banyuwangi">
-    <title>Detail UMKM — Banyuangi Trip</title>
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Detail produk UMKM Desa Banyuanyar">
+  <title>Detail UMKM — Desa Banyuanyar</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
-
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar scrolled" id="navbar">
-        <div class="container">
-            <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Banyuangi Trip</a>
-            <div class="nav-links" id="navLinks">
-                <a href="index.html">Beranda</a>
-                <a href="umkm.html" class="active">UMKM</a>
-                <a href="peta.html">Peta</a>
-                <a href="umkm-form.html">+ Tambah UMKM</a>
-            </div>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span style="background: var(--text-primary);"></span>
-                <span style="background: var(--text-primary);"></span>
-                <span style="background: var(--text-primary);"></span>
-            </button>
-        </div>
-    </nav>
-
-    <!-- DETAIL CONTENT -->
-    <div class="detail-header">
-        <div class="container" id="detail-page">
-            <!-- Rendered by JS -->
-            <div class="empty-state">
-                <div class="icon">⏳</div>
-                <h3>Memuat data...</h3>
-            </div>
-        </div>
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Desa Banyuanyar</a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Beranda</a>
+        <a href="umkm.html" class="active">UMKM</a>
+        <a href="peta.html">Peta</a>
+        <a href="admin/login.html">🔐 Admin</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span style="background: var(--text-primary);"></span>
+        <span style="background: var(--text-primary);"></span>
+        <span style="background: var(--text-primary);"></span>
+      </button>
     </div>
+  </nav>
 
-    <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="js/umkm.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/review.js"></script>
-    <script src="js/app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-            if (!id) {
-                window.location.href = 'umkm.html';
-                return;
-            }
-            renderDetailPage(id);
-        });
+  <!-- DETAIL CONTENT -->
+  <div class="detail-header">
+    <div class="container" id="detail-page">
+      <div class="empty-state">
+        <div class="icon">⏳</div>
+        <h3>Memuat data...</h3>
+      </div>
+    </div>
+  </div>
 
-        function renderDetailPage(id) {
-            const item = getUmkmById(id);
-            const container = document.getElementById('detail-page');
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) {
+        window.location.href = 'umkm.html';
+        return;
+      }
 
-            if (!item) {
-                container.innerHTML = `
+      try {
+        const result = await apiGetUmkmById(id);
+        renderDetail(result.data);
+      } catch (err) {
+        document.getElementById('detail-page').innerHTML = `
           <div class="empty-state">
             <div class="icon">❌</div>
             <h3>UMKM Tidak Ditemukan</h3>
-            <p>Data UMKM yang Anda cari tidak tersedia.</p>
+            <p>${err.message}</p>
             <a href="umkm.html" class="btn btn-primary" style="margin-top: 16px;">← Kembali ke Daftar</a>
           </div>
         `;
-                return;
-            }
+      }
+    });
 
-            document.title = `${item.nama} — Banyuangi Trip`;
+    function renderDetail(item) {
+      document.title = `${item.nama_produk} — Desa Banyuanyar`;
+      const container = document.getElementById('detail-page');
 
-            container.innerHTML = `
+      container.innerHTML = `
         <!-- Breadcrumb -->
         <div style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-muted);">
           <a href="index.html" style="color: var(--primary);">Beranda</a> / 
           <a href="umkm.html" style="color: var(--primary);">UMKM</a> / 
-          <span>${item.nama}</span>
+          <span>${item.nama_produk}</span>
         </div>
 
         <!-- Main Image -->
-        <img src="${item.gambar}" alt="${item.nama}" class="detail-img fade-in" 
+        <img src="${getImageUrl(item.foto_url)}" alt="${item.nama_produk}" class="detail-img fade-in" 
           onerror="this.src='images/umkm-default.png'">
 
         <!-- Content Grid -->
@@ -97,72 +90,68 @@
           <div>
             <div class="detail-info fade-in">
               <div class="badge-row">
-                <span class="umkm-badge">${item.jenisProduk}</span>
+                <span class="umkm-badge">${item.kategori}</span>
               </div>
-              <h1 style="font-size: 1.8rem; margin-bottom: 8px;">${item.nama}</h1>
-              <div class="umkm-rating" style="margin-bottom: 20px;">
-                <span class="stars" style="font-size: 1.1rem;">${renderStars(item.rating)}</span>
-                <span class="rating-value" style="font-size: 1rem;">${item.rating}</span>
-                <span class="rating-count">(${item.ulasan.length} ulasan)</span>
-              </div>
+              <h1 style="font-size: 1.8rem; margin-bottom: 8px;">${item.nama_produk}</h1>
+              
+              <p class="umkm-price" style="font-size: 1.3rem; margin-bottom: 20px;">${item.harga || '-'}</p>
 
               <h3 style="margin-bottom: 8px; margin-top: 24px;">📝 Deskripsi</h3>
-              <p style="margin-bottom: 20px;">${item.deskripsi}</p>
+              <p style="margin-bottom: 20px;">${item.deskripsi || 'Tidak ada deskripsi.'}</p>
 
-              <h3 style="margin-bottom: 8px;">⭐ Keunggulan</h3>
-              <p style="margin-bottom: 20px;">${item.keunggulan}</p>
+              ${item.keunggulan ? `
+                <h3 style="margin-bottom: 8px;">⭐ Keunggulan</h3>
+                <p style="margin-bottom: 20px;">${item.keunggulan}</p>
+              ` : ''}
 
-              ${item.lat && item.lng ? `
-                <h3 style="margin-bottom: 12px;">📍 Lokasi</h3>
+              <h3 style="margin-bottom: 8px;">📍 Alamat</h3>
+              <p style="margin-bottom: 20px;">${item.alamat || 'Desa Banyuanyar, Kec. Ampel, Kab. Boyolali'}</p>
+
+              ${item.latitude && item.longitude ? `
+                <h3 style="margin-bottom: 12px;">🗺️ Lokasi di Peta</h3>
                 <div class="map-container" id="detailMap" style="height: 250px; margin-bottom: 20px;"></div>
               ` : ''}
-            </div>
-
-            <!-- Reviews -->
-            <div class="fade-in">
-              ${renderReviewSection(id)}
             </div>
           </div>
 
           <!-- Right: Sidebar -->
           <div class="detail-sidebar">
-            <div class="card fade-in">
-              <p class="umkm-price">${formatPrice(item.harga)}</p>
-              <div class="umkm-rating" style="margin-bottom: 20px;">
-                <span class="stars">${renderStars(item.rating)}</span>
-                <span class="rating-value">${item.rating}</span>
+            <div class="card fade-in" style="padding: 24px;">
+              <p class="umkm-price" style="font-size: 1.5rem; margin-bottom: 16px;">${item.harga || '-'}</p>
+              <div style="margin-bottom: 16px;">
+                <span class="umkm-badge">${item.kategori}</span>
               </div>
-              <a href="https://wa.me/6281234567890?text=Halo, saya tertarik dengan produk ${encodeURIComponent(item.nama)}" 
-                target="_blank" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
-                💬 Hubungi via WhatsApp
+              
+              ${item.kontak ? `
+                <a href="https://wa.me/${item.kontak.replace(/[^0-9]/g, '')}?text=Halo, saya tertarik dengan ${encodeURIComponent(item.nama_produk)}" 
+                  target="_blank" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
+                  💬 Hubungi via WhatsApp
+                </a>
+              ` : ''}
+              
+              <a href="umkm.html" class="btn btn-secondary" style="width: 100%;">
+                ← Kembali ke Daftar
               </a>
-              <a href="umkm-form.html?id=${item.id}" class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">
-                ✏️ Edit UMKM
-              </a>
-              <button onclick="showDeleteModal('${item.id}', '${item.nama}')" class="btn btn-danger" style="width: 100%;">
-                🗑️ Hapus UMKM
-              </button>
             </div>
           </div>
         </div>
       `;
 
-            // Init mini map
-            if (item.lat && item.lng) {
-                setTimeout(() => {
-                    const miniMap = L.map('detailMap', { scrollWheelZoom: false }).setView([item.lat, item.lng], 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap',
-                        maxZoom: 19,
-                    }).addTo(miniMap);
-                    L.marker([item.lat, item.lng]).addTo(miniMap);
-                    setTimeout(() => miniMap.invalidateSize(), 200);
-                }, 100);
-            }
+      // Init mini map
+      if (item.latitude && item.longitude) {
+        setTimeout(() => {
+          const miniMap = L.map('detailMap', { scrollWheelZoom: false }).setView([item.latitude, item.longitude], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19,
+          }).addTo(miniMap);
+          L.marker([item.latitude, item.longitude]).addTo(miniMap);
+          setTimeout(() => miniMap.invalidateSize(), 200);
+        }, 100);
+      }
 
-            initScrollAnimations();
-        }
-    </script>
+      initScrollAnimations();
+    }
+  </script>
 </body>
-
 </html>

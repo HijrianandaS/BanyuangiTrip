@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelola UMKM — Admin Desa Banyuanyar</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px; background: var(--bg-dark); color: white;
+      padding: 24px 0; flex-shrink: 0; display: flex; flex-direction: column;
+    }
+    .sidebar-brand { padding: 0 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+    .sidebar-brand h2 { font-size: 1.2rem; color: white; display: flex; align-items: center; gap: 8px; }
+    .sidebar-brand p { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .sidebar-nav { flex: 1; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+      color: rgba(255,255,255,0.6); font-size: 0.9rem; font-weight: 500; transition: all 0.2s;
+    }
+    .sidebar-link:hover, .sidebar-link.active { color: white; background: rgba(255,255,255,0.08); border-left: 3px solid var(--primary-light); }
+    .sidebar-link .icon { font-size: 1.2rem; width: 24px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-user { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+
+    .admin-main { flex: 1; background: var(--bg-primary); overflow-y: auto; }
+    .admin-header { background: white; padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .admin-header h1 { font-size: 1.4rem; }
+    .admin-body { padding: 32px; }
+
+    .form-card { max-width: 800px; }
+
+    .keunggulan-group { display: none; }
+    .keunggulan-group.show { display: block; }
+
+    .image-current { max-width: 150px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border); }
+
+    @media (max-width: 768px) {
+      .admin-layout { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; padding: 12px; overflow-x: auto; }
+      .sidebar-brand, .sidebar-footer { display: none; }
+      .sidebar-nav { display: flex; gap: 4px; }
+      .sidebar-link { padding: 8px 16px; white-space: nowrap; font-size: 0.8rem; border-left: none !important; border-radius: 8px; }
+      .admin-body { padding: 16px; }
+      .admin-header { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>🌿 Banyuanyar</h2>
+        <p>Panel Administrator</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span> Dashboard
+        </a>
+        <a href="manage-umkm.html" class="sidebar-link active">
+          <span class="icon">🏪</span> Kelola UMKM
+        </a>
+        <a href="../index.html" class="sidebar-link">
+          <span class="icon">🌐</span> Lihat Website
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="currentUser">👤 Admin</div>
+        <button onclick="apiLogout()" class="btn btn-sm btn-secondary" style="width: 100%; font-size: 0.8rem;">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1 id="pageTitle">➕ Tambah UMKM Baru</h1>
+        <a href="dashboard.html" class="btn btn-secondary btn-sm">← Kembali</a>
+      </div>
+
+      <div class="admin-body">
+        <div class="form-card">
+          <form id="umkmForm">
+            <!-- Kategori -->
+            <div class="form-group">
+              <label class="form-label" for="kategori">Kategori UMKM *</label>
+              <select class="form-select" id="kategori" required onchange="toggleKeunggulan()">
+                <option value="">Pilih kategori</option>
+                <option value="MANDIRI">UMKM Mandiri</option>
+                <option value="INDUK">UMKM Induk</option>
+              </select>
+            </div>
+
+            <!-- Nama Produk -->
+            <div class="form-group">
+              <label class="form-label" for="nama_produk">Nama Produk / UMKM *</label>
+              <input type="text" class="form-input" id="nama_produk" placeholder="Contoh: Keripik Pisang Gandasuli" required>
+            </div>
+
+            <!-- Deskripsi -->
+            <div class="form-group">
+              <label class="form-label" for="deskripsi">Deskripsi</label>
+              <textarea class="form-textarea" id="deskripsi" placeholder="Deskripsikan produk atau usaha UMKM..."></textarea>
+            </div>
+
+            <!-- Harga & Kontak -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="harga">Harga</label>
+                <input type="text" class="form-input" id="harga" placeholder="Rp 10.000 - Rp 50.000">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="kontak">Kontak (WhatsApp/Telp)</label>
+                <input type="text" class="form-input" id="kontak" placeholder="081234567890">
+              </div>
+            </div>
+
+            <!-- Alamat -->
+            <div class="form-group">
+              <label class="form-label" for="alamat">Alamat</label>
+              <input type="text" class="form-input" id="alamat" placeholder="Dukuh ..., Desa Banyuanyar">
+            </div>
+
+            <!-- Keunggulan (hanya untuk INDUK) -->
+            <div class="form-group keunggulan-group" id="keunggulanGroup">
+              <label class="form-label" for="keunggulan">Keunggulan Produk (Khusus UMKM Induk)</label>
+              <textarea class="form-textarea" id="keunggulan" placeholder="Apa keunggulan utama dari UMKM ini?" style="min-height: 80px;"></textarea>
+            </div>
+
+            <!-- Foto -->
+            <div class="form-group">
+              <label class="form-label">Foto Produk</label>
+              <div class="image-upload" onclick="document.getElementById('fotoInput').click()">
+                <div class="icon">📷</div>
+                <p>Klik untuk upload gambar</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Format: JPG, PNG. Max 5MB</p>
+              </div>
+              <input type="file" id="fotoInput" accept="image/*" style="display: none;" onchange="previewFoto(event)">
+              <img id="fotoPreview" class="image-current" style="display: none;" alt="Preview">
+            </div>
+
+            <!-- Koordinat -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="latitude">Latitude</label>
+                <input type="number" class="form-input" id="latitude" placeholder="-7.4300" step="any">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="longitude">Longitude</label>
+                <input type="number" class="form-input" id="longitude" placeholder="110.5900" step="any">
+              </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -12px; margin-bottom: 24px;">
+              💡 Buka Google Maps → klik kanan lokasi → salin koordinat.
+            </p>
+
+            <!-- Submit -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">💾 Simpan UMKM</button>
+              <a href="dashboard.html" class="btn btn-secondary btn-lg">Batal</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    // Auth guard
+    if (!isLoggedIn()) { window.location.href = 'login.html'; }
+
+    const user = getCurrentUser();
+    if (user) document.getElementById('currentUser').textContent = '👤 ' + user.username;
+
+    let editId = null;
+
+    function toggleKeunggulan() {
+      const kat = document.getElementById('kategori').value;
+      const group = document.getElementById('keunggulanGroup');
+      group.classList.toggle('show', kat === 'INDUK');
+    }
+
+    function previewFoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.getElementById('fotoPreview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Check edit mode
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      editId = params.get('id');
+
+      if (editId) {
+        document.getElementById('pageTitle').textContent = '✏️ Edit UMKM';
+        document.getElementById('submitBtn').textContent = '✅ Update UMKM';
+        document.title = 'Edit UMKM — Admin Desa Banyuanyar';
+
+        try {
+          const result = await apiGetUmkmById(editId);
+          const item = result.data;
+
+          document.getElementById('kategori').value = item.kategori;
+          document.getElementById('nama_produk').value = item.nama_produk || '';
+          document.getElementById('deskripsi').value = item.deskripsi || '';
+          document.getElementById('harga').value = item.harga || '';
+          document.getElementById('kontak').value = item.kontak || '';
+          document.getElementById('alamat').value = item.alamat || '';
+          document.getElementById('keunggulan').value = item.keunggulan || '';
+          document.getElementById('latitude').value = item.latitude || '';
+          document.getElementById('longitude').value = item.longitude || '';
+
+          toggleKeunggulan();
+
+          if (item.foto_url) {
+            const img = document.getElementById('fotoPreview');
+            img.src = item.foto_url;
+            img.style.display = 'block';
+          }
+        } catch (err) {
+          alert('Gagal memuat data UMKM: ' + err.message);
+          window.location.href = 'dashboard.html';
+        }
+      }
+    });
+
+    // Form submit
+    document.getElementById('umkmForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Menyimpan...';
+
+      const formData = new FormData();
+      formData.append('kategori', document.getElementById('kategori').value);
+      formData.append('nama_produk', document.getElementById('nama_produk').value.trim());
+      formData.append('deskripsi', document.getElementById('deskripsi').value.trim());
+      formData.append('harga', document.getElementById('harga').value.trim());
+      formData.append('kontak', document.getElementById('kontak').value.trim());
+      formData.append('alamat', document.getElementById('alamat').value.trim());
+      formData.append('keunggulan', document.getElementById('keunggulan').value.trim());
+      formData.append('latitude', document.getElementById('latitude').value);
+      formData.append('longitude', document.getElementById('longitude').value);
+
+      const fotoFile = document.getElementById('fotoInput').files[0];
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      try {
+        if (editId) {
+          await apiUpdateUmkm(editId, formData);
+          alert('UMKM berhasil diperbarui!');
+        } else {
+          await apiCreateUmkm(formData);
+          alert('UMKM berhasil ditambahkan!');
+        }
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        alert('Gagal menyimpan: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = editId ? '✅ Update UMKM' : '💾 Simpan UMKM';
+      }
+    });
+  </script>
+</body>
+</html>

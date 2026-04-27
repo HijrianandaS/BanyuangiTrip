@@ -1,116 +1,150 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Daftar UMKM unggulan Banyuwangi — temukan produk lokal berkualitas.">
-    <title>UMKM — Banyuangi Trip</title>
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Daftar UMKM unggulan Desa Banyuanyar — produk lokal berkualitas.">
+  <title>UMKM — Desa Banyuanyar</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
-
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar scrolled" id="navbar">
-        <div class="container">
-            <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Banyuangi Trip</a>
-            <div class="nav-links" id="navLinks">
-                <a href="index.html">Beranda</a>
-                <a href="umkm.html" class="active">UMKM</a>
-                <a href="peta.html">Peta</a>
-                <a href="umkm-form.html">+ Tambah UMKM</a>
-            </div>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span style="background: var(--text-primary);"></span>
-                <span style="background: var(--text-primary);"></span>
-                <span style="background: var(--text-primary);"></span>
-            </button>
-        </div>
-    </nav>
-
-    <!-- PAGE HEADER -->
-    <div class="page-header">
-        <div class="container">
-            <h1>UMKM Unggulan Desa</h1>
-            <p>Produk dan jasa berkualitas dari pelaku UMKM lokal Banyuwangi</p>
-        </div>
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Desa Banyuanyar</a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Beranda</a>
+        <a href="umkm.html" class="active">UMKM</a>
+        <a href="peta.html">Peta</a>
+        <a href="admin/login.html">🔐 Admin</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span style="background: var(--text-primary);"></span>
+        <span style="background: var(--text-primary);"></span>
+        <span style="background: var(--text-primary);"></span>
+      </button>
     </div>
+  </nav>
 
-    <!-- FILTER & CONTENT -->
-    <section class="section" style="padding-top: 40px;">
-        <div class="container">
-            <!-- Filter Bar -->
-            <div class="filter-bar fade-in">
-                <input type="text" class="form-input" id="searchInput" placeholder="🔍 Cari produk UMKM...">
-                <div class="filter-pills" id="filterPills"></div>
-                <a href="umkm-form.html" class="btn btn-primary btn-sm" style="margin-left: auto;">+ Tambah UMKM</a>
-            </div>
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="container">
+      <h1>UMKM Unggulan Desa</h1>
+      <p>Produk dan jasa berkualitas dari pelaku UMKM lokal Desa Banyuanyar</p>
+    </div>
+  </div>
 
-            <!-- UMKM Grid -->
-            <div class="umkm-grid" id="umkm-container"></div>
+  <!-- FILTER & CONTENT -->
+  <section class="section" style="padding-top: 40px;">
+    <div class="container">
+      <!-- Filter Bar -->
+      <div class="filter-bar fade-in">
+        <input type="text" class="form-input" id="searchInput" placeholder="🔍 Cari produk UMKM...">
+        <div class="filter-pills" id="filterPills">
+          <button class="filter-pill active" data-kategori="Semua">Semua</button>
+          <button class="filter-pill" data-kategori="MANDIRI">UMKM Mandiri</button>
+          <button class="filter-pill" data-kategori="INDUK">UMKM Induk</button>
         </div>
-    </section>
+      </div>
 
-    <!-- Scripts -->
-    <script src="js/umkm.js"></script>
-    <script src="js/app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            renderUmkmCards('umkm-container');
-            renderFilterPills();
-            setupSearch();
+      <!-- UMKM Grid -->
+      <div class="umkm-grid" id="umkm-container">
+        <div class="empty-state" style="grid-column: 1/-1;">
+          <div class="icon">⏳</div>
+          <h3>Memuat data...</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let currentKategori = 'Semua';
+    let currentSearch = '';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUmkm();
+      setupFilters();
+      setupSearch();
+    });
+
+    function setupFilters() {
+      document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          currentKategori = pill.dataset.kategori;
+          loadUmkm();
         });
+      });
+    }
 
-        function renderFilterPills() {
-            const container = document.getElementById('filterPills');
-            const jenisList = getJenisProdukList();
-            container.innerHTML = jenisList.map(j =>
-                `<button class="filter-pill${j === 'Semua' ? ' active' : ''}" data-jenis="${j}">${j}</button>`
-            ).join('');
+    function setupSearch() {
+      let timeout;
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          currentSearch = e.target.value.trim();
+          loadUmkm();
+        }, 300);
+      });
+    }
 
-            container.querySelectorAll('.filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-                    pill.classList.add('active');
-                    applyFilters();
-                });
-            });
+    async function loadUmkm() {
+      const container = document.getElementById('umkm-container');
+
+      try {
+        const result = await apiGetUmkmList(currentKategori, currentSearch);
+        const items = result.data;
+
+        if (items.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <div class="icon">🔍</div>
+              <h3>Tidak Ditemukan</h3>
+              <p>Tidak ada UMKM yang sesuai dengan pencarian Anda.</p>
+            </div>
+          `;
+          return;
         }
 
-        function setupSearch() {
-            const searchInput = document.getElementById('searchInput');
-            let timeout;
-            searchInput.addEventListener('input', () => {
-                clearTimeout(timeout);
-                timeout = setTimeout(applyFilters, 300);
-            });
-        }
+        container.innerHTML = items.map(item => `
+          <div class="card umkm-card fade-in">
+            <div class="card-img-wrapper">
+              <img src="${getImageUrl(item.foto_url)}" alt="${item.nama_produk}" class="card-img" onerror="this.src='images/umkm-default.png'">
+            </div>
+            <div class="card-body">
+              <span class="umkm-badge">${item.kategori}</span>
+              <h3 class="card-title">${item.nama_produk}</h3>
+              <p class="umkm-price">${item.harga || '-'}</p>
+              <p class="card-text">${item.deskripsi || ''}</p>
+              <div class="card-meta">
+                <span>📍 ${item.alamat || 'Desa Banyuanyar'}</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <a href="umkm-detail.html?id=${item.id}" class="card-link">Lihat Detail →</a>
+            </div>
+          </div>
+        `).join('');
 
-        function applyFilters() {
-            const keyword = document.getElementById('searchInput').value;
-            const activeJenis = document.querySelector('.filter-pill.active')?.dataset.jenis || 'Semua';
-            const items = filterUmkm(keyword, activeJenis);
-            const container = document.getElementById('umkm-container');
-
-            if (items.length === 0) {
-                container.innerHTML = `
+        initScrollAnimations();
+      } catch (err) {
+        console.error('Error loading UMKM:', err);
+        container.innerHTML = `
           <div class="empty-state" style="grid-column: 1/-1;">
-            <div class="icon">🔍</div>
-            <h3>Tidak Ditemukan</h3>
-            <p>Tidak ada UMKM yang sesuai dengan pencarian Anda.</p>
+            <div class="icon">❌</div>
+            <h3>Gagal Memuat Data</h3>
+            <p>Pastikan server backend sudah berjalan.</p>
           </div>
         `;
-                return;
-            }
-
-            container.innerHTML = items.map(renderUmkmCard).join('');
-            initScrollAnimations();
-        }
-    </script>
+      }
+    }
+  </script>
 </body>
-
 </html>

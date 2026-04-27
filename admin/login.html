@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Admin — Desa Banyuanyar</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%);
+    }
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+    .login-card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .login-logo {
+      font-size: 3rem;
+      margin-bottom: 8px;
+    }
+    .login-card h1 {
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .login-card .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+    .login-card .form-group {
+      text-align: left;
+    }
+    .login-card .form-input {
+      padding: 14px 16px;
+      font-size: 1rem;
+    }
+    .login-card .btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      margin-top: 8px;
+    }
+    .login-error {
+      background: #FFF5F5;
+      color: #E53E3E;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .login-footer {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .login-footer a {
+      color: var(--primary);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-logo">🌿</div>
+      <h1>Desa Banyuanyar</h1>
+      <p class="subtitle">Panel Admin — Sistem Informasi UMKM</p>
+
+      <div class="login-error" id="loginError"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <input type="text" class="form-input" id="username" placeholder="Masukkan username" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" class="form-input" id="password" placeholder="Masukkan password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="loginBtn">🔐 Masuk</button>
+      </form>
+
+      <div class="login-footer">
+        <a href="../index.html">← Kembali ke Beranda</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (isLoggedIn()) {
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errorEl = document.getElementById('loginError');
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.textContent = '⏳ Memproses...';
+      btn.disabled = true;
+      errorEl.style.display = 'none';
+
+      try {
+        await apiLogin(username, password);
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        errorEl.textContent = err.message || 'Login gagal. Periksa username dan password.';
+        errorEl.style.display = 'block';
+        btn.textContent = '🔐 Masuk';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Banyuangi Trip — Portal wisata dan UMKM desa Banyuwangi. Temukan keindahan alam, budaya, dan produk lokal berkualitas.">
-  <title>Banyuangi Trip — Wisata & UMKM Desa</title>
+  <meta name="description" content="Desa Banyuanyar — Sistem Informasi Peta Digital UMKM Desa Banyuanyar, Kecamatan Ampel, Kabupaten Boyolali.">
+  <title>Desa Banyuanyar — Peta Digital UMKM</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
@@ -22,7 +22,7 @@
   <nav class="navbar" id="navbar">
     <div class="container">
       <a href="index.html" class="nav-brand">
-        🌿 Banyuangi Trip
+        🌿 Desa Banyuanyar
       </a>
       <div class="nav-links" id="navLinks">
         <a href="index.html" class="active">Beranda</a>
@@ -43,11 +43,11 @@
   <section class="hero" id="hero">
     <div class="hero-bg" style="background-image: url('images/hero-bg.png');"></div>
     <div class="hero-content">
-      <div class="hero-badge">🌿 Selamat Datang di Banyuwangi</div>
-      <h1 class="hero-title">Banyuangi Trip</h1>
+      <div class="hero-badge">🌿 Green Smart Village</div>
+      <h1 class="hero-title">Desa Banyuanyar</h1>
       <p class="hero-desc">
-        Temukan keindahan alam, budaya yang kaya, produk UMKM unggulan, dan keramahan masyarakat desa kami. 
-        Jelajahi pesona Banyuwangi melalui wisata alam dan produk lokal berkualitas.
+        Selamat datang di website resmi Desa Banyuanyar, Kecamatan Ampel, Kabupaten Boyolali. 
+        Temukan keindahan alam, budaya, dan produk UMKM lokal yang berkualitas.
       </p>
       <div class="hero-buttons">
         <a href="umkm.html" class="btn btn-primary btn-lg">Jelajahi UMKM ↗</a>
@@ -66,7 +66,7 @@
   <section class="section" id="keunggulan">
     <div class="container">
       <div class="section-header fade-in">
-        <div class="section-badge">✨ Mengapa Banyuwangi?</div>
+        <div class="section-badge">✨ Mengapa Banyuanyar?</div>
         <h2>Keunggulan Desa Kami</h2>
         <p>Potensi wisata dan UMKM unggulan yang menanti untuk dijelajahi</p>
       </div>
@@ -140,7 +140,7 @@
       <div class="section-header fade-in">
         <div class="section-badge">📍 Lokasi</div>
         <h2>Jelajahi Peta Desa</h2>
-        <p>Temukan lokasi UMKM dan destinasi wisata di Banyuwangi</p>
+        <p>Temukan lokasi UMKM dan destinasi wisata di Desa Banyuanyar</p>
       </div>
       <div class="map-container fade-in" id="homeMap"></div>
       <div style="text-align: center; margin-top: 32px;" class="fade-in">
@@ -154,7 +154,7 @@
     <div class="container">
       <h2 class="fade-in">Punya Produk UMKM Unggulan?</h2>
       <p class="fade-in">Daftarkan produk UMKM Anda sekarang dan jangkau lebih banyak pelanggan melalui platform kami</p>
-      <a href="umkm-form.html" class="btn btn-outline btn-lg fade-in">+ Daftarkan UMKM Anda</a>
+      <a href="admin/login.html" class="btn btn-outline btn-lg fade-in">🔐 Panel Admin</a>
     </div>
   </section>
 
@@ -163,8 +163,8 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <h3>🌿 Banyuangi Trip</h3>
-          <p>Portal wisata dan UMKM desa Banyuwangi. Menampilkan keindahan alam, budaya, dan produk lokal berkualitas dari masyarakat setempat.</p>
+          <h3>🌿 Desa Banyuanyar</h3>
+          <p>Sistem Informasi Peta Digital UMKM Desa Banyuanyar, Kecamatan Ampel, Kabupaten Boyolali.</p>
         </div>
         <div>
           <h4>Navigasi</h4>
@@ -187,33 +187,104 @@
         <div>
           <h4>Hubungi Kami</h4>
           <ul class="footer-contact">
-            <li><span class="icon">📍</span> Banyuwangi, Jawa Timur, Indonesia</li>
+            <li><span class="icon">📍</span> Desa Banyuanyar, Kec. Ampel, Kab. Boyolali</li>
             <li><span class="icon">📞</span> +62 812 3456 7890</li>
-            <li><span class="icon">✉️</span> info@banyuangitrip.id</li>
+            <li><span class="icon">✉️</span> info@desabanyuanyar.id</li>
             <li><span class="icon">🕐</span> Senin - Minggu: 08.00 - 17.00</li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        &copy; 2025 Banyuangi Trip. All rights reserved.
+        &copy; 2025 Desa Banyuanyar. All rights reserved.
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/umkm.js"></script>
-  <script src="js/map.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
     // Initialize homepage
-    document.addEventListener('DOMContentLoaded', () => {
-      // Render UMKM preview (limit 3)
-      renderUmkmCards('umkm-preview', 3);
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load UMKM preview from API
+      try {
+        const result = await apiGetUmkmList();
+        const container = document.getElementById('umkm-preview');
+        const items = result.data.slice(0, 3);
+
+        if (items.length === 0) {
+          container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">📦</div><h3>Belum Ada UMKM</h3><p>Data UMKM belum tersedia.</p></div>';
+        } else {
+          container.innerHTML = items.map(item => `
+            <div class="card umkm-card fade-in">
+              <div class="card-img-wrapper">
+                <img src="${getImageUrl(item.foto_url)}" alt="${item.nama_produk}" class="card-img" onerror="this.src='images/umkm-default.png'">
+              </div>
+              <div class="card-body">
+                <span class="umkm-badge">${item.kategori}</span>
+                <h3 class="card-title">${item.nama_produk}</h3>
+                <p class="umkm-price">${item.harga || '-'}</p>
+                <p class="card-text">${item.deskripsi || ''}</p>
+                <div class="card-meta">
+                  <span>📍 ${item.alamat || 'Desa Banyuanyar'}</span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <a href="umkm-detail.html?id=${item.id}" class="card-link">Lihat Detail →</a>
+              </div>
+            </div>
+          `).join('');
+        }
+        initScrollAnimations();
+      } catch (err) {
+        console.error('Error loading UMKM:', err);
+      }
 
       // Initialize map preview
-      initMap('homeMap', { scrollWheel: false, zoom: 12 });
+      try {
+        const mapResult = await apiGetUmkmList();
+        initMapFromData('homeMap', mapResult.data, { scrollWheel: false, zoom: 13 });
+      } catch (err) {
+        console.error('Error loading map:', err);
+      }
     });
+
+    // Map helper - init map with API data
+    function initMapFromData(containerId, items, options = {}) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      const center = [-7.4300, 110.5900];
+      const map = L.map(containerId, {
+        scrollWheelZoom: options.scrollWheel !== false,
+      }).setView(center, options.zoom || 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      const markers = [];
+      items.forEach(item => {
+        if (!item.latitude || !item.longitude) return;
+        const icon = L.divIcon({
+          className: 'custom-marker',
+          html: '<div style="background:#2E7D32;color:white;width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;"><span style="transform:rotate(45deg);font-size:16px;">📍</span></div>',
+          iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],
+        });
+        const marker = L.marker([item.latitude, item.longitude], { icon })
+          .addTo(map)
+          .bindPopup(`<div style="font-family:Inter,sans-serif;min-width:200px;"><h3 style="font-size:1rem;margin-bottom:4px;">${item.nama_produk}</h3><p style="color:#2E7D32;font-weight:700;">${item.harga || ''}</p><p style="font-size:0.8rem;color:#718096;">${item.kategori} · ${item.alamat || ''}</p><a href="umkm-detail.html?id=${item.id}" style="display:inline-block;padding:4px 12px;background:#2E7D32;color:white;border-radius:20px;font-size:0.8rem;margin-top:6px;">Detail →</a></div>`, { maxWidth: 280 });
+        markers.push(marker);
+      });
+
+      if (markers.length > 1) {
+        map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1));
+      }
+
+      setTimeout(() => map.invalidateSize(), 300);
+    }
   </script>
 </body>
 </html>
