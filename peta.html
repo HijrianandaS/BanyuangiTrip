@@ -2,44 +2,145 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Peta interaktif lokasi UMKM Desa Banyuanyar">
-  <title>Peta — Desa Banyuanyar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Peta interaktif lokasi UMKM Desa Banyuanyar, Kecamatan Ampel, Boyolali.">
+  <title>Peta Digital — Desa Banyuanyar</title>
+
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Base Styles -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
+
   <style>
+    /* =========================================
+       LAYOUT PETA & PANEL (FIX SCROLL & RESPONSIVE)
+       ========================================= */
+    
+    /* 1. Kontainer Utama (Mengunci tinggi layar) */
     .map-page-container {
-      padding-top: 68px;
-      height: 100vh;
+      padding-top: 70px; /* Menyesuaikan tinggi navbar */
+      height: 100vh; /* Fallback */
+      height: 100dvh; /* Tinggi presisi di HP */
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
     }
+
+    /* 2. Toolbar Pencarian */
     .map-toolbar {
       display: flex;
       align-items: center;
       gap: 16px;
       padding: 12px 24px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      z-index: 10;
     }
-    .map-toolbar h2 { font-size: 1.2rem; margin: 0; white-space: nowrap; }
-    .map-toolbar .form-input { max-width: 300px; padding: 8px 14px; font-size: 0.85rem; }
-    .map-count { font-size: 0.85rem; color: var(--text-muted); margin-left: auto; }
-    #fullMap { flex: 1; min-height: 0; }
+    .map-toolbar h2 { font-size: 1.1rem; margin: 0; color: #2d3748; white-space: nowrap; }
+    .map-toolbar .form-input { max-width: 350px; flex: 1; }
+    .map-count { font-size: 0.85rem; color: #718096; margin-left: auto; }
+
+    /* 3. Wrapper Peta & Panel (Trik Flexbox Min-Height) */
+    .main-map-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      background: #f8fafc;
+      overflow: hidden; /* Cegah isi panel merusak layout */
+      min-height: 0;    /* Kunci agar panel bisa di-scroll */
+    }
+
+    #fullMap {
+      flex: 1;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* 4. Panel Samping (Detail UMKM) */
+    .side-panel {
+      width: 400px;
+      height: 100%;
+      background: white;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+      z-index: 1000;
+      overflow-y: auto;          /* Scroll vertical aktif */
+      -webkit-overflow-scrolling: touch; /* Scroll mulus di HP */
+      display: none;             /* Sembunyi sebelum diklik */
+      border-left: 1px solid #e2e8f0;
+      padding-bottom: 30px;      /* Jarak ekstra di bawah */
+    }
+
+    .side-panel.active { display: block; }
+
+    .close-panel {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1001;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Isi Konten Panel */
+    .panel-img { width: 100%; height: 250px; object-fit: cover; }
+    .panel-body { padding: 24px; }
+    .panel-category { 
+      background: #E8F5E9; color: #2E7D32; 
+      padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .panel-title { font-size: 1.4rem; margin: 12px 0 5px 0; color: #1a202c; font-weight: 800; line-height: 1.3; }
+    .panel-price { font-size: 1.1rem; color: #2E7D32; font-weight: 700; margin-bottom: 20px; }
+    
+    .info-group { margin-bottom: 20px; }
+    .info-label { font-size: 0.75rem; color: #a0aec0; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; display: block; }
+    .info-value { font-size: 0.95rem; color: #4a5568; line-height: 1.5; }
+
+    /* Floating Legend */
     .map-legend {
-      position: absolute; bottom: 32px; left: 16px; z-index: 999;
-      background: white; border-radius: var(--radius-md); padding: 16px;
-      box-shadow: var(--shadow-lg); font-size: 0.85rem; max-width: 220px;
+      position: absolute; bottom: 25px; left: 20px; z-index: 999;
+      background: white; border-radius: 12px; padding: 12px 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.85rem;
     }
-    .map-legend h4 { margin-bottom: 8px; font-size: 0.9rem; }
-    .map-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Marker Custom */
     .custom-marker { background: transparent !important; border: none !important; }
-    .custom-popup .leaflet-popup-content-wrapper { border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
-    .custom-popup .leaflet-popup-content { margin: 12px; }
+
+    /* =========================================
+       RESPONSIVE MOBILE KHUSUS PETA
+       ========================================= */
+    @media (max-width: 768px) {
+      .map-toolbar { flex-wrap: wrap; padding: 10px 16px; }
+      .map-toolbar h2 { display: none; } /* Sembunyikan judul di HP agar search bar lega */
+      .map-toolbar .form-input { max-width: 100%; }
+      .map-count { width: 100%; text-align: right; margin-top: 4px; }
+      
+      .side-panel {
+        position: absolute; 
+        bottom: 0; 
+        right: 0; 
+        width: 100%; 
+        height: 65%; /* Menutupi 65% layar bawah di HP */
+        border-left: none; 
+        border-top: 2px solid #e2e8f0;
+        border-radius: 20px 20px 0 0;
+      }
+      .map-legend { bottom: calc(65% + 15px); } /* Pindah ke atas panel saat aktif */
+    }
   </style>
 </head>
 <body>
@@ -50,11 +151,11 @@
       <a href="index.html" class="nav-brand" style="color: var(--text-primary);">🌿 Desa Banyuanyar</a>
       <div class="nav-links" id="navLinks">
         <a href="index.html">Beranda</a>
-        <a href="umkm.html">UMKM</a>
-        <a href="peta.html" class="active">Peta</a>
+        <a href="umkm.html">Daftar UMKM</a>
+        <a href="peta.html" class="active">Peta Digital</a>
         <a href="admin/login.html">🔐 Admin</a>
       </div>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <button class="nav-toggle" id="navToggle">
         <span style="background: var(--text-primary);"></span>
         <span style="background: var(--text-primary);"></span>
         <span style="background: var(--text-primary);"></span>
@@ -62,20 +163,34 @@
     </div>
   </nav>
 
-  <!-- MAP PAGE -->
+  <!-- MAIN CONTAINER -->
   <div class="map-page-container">
+    <!-- Search Toolbar -->
     <div class="map-toolbar">
       <h2>📍 Peta UMKM</h2>
-      <input type="text" class="form-input" id="mapSearch" placeholder="🔍 Cari UMKM di peta...">
-      <span class="map-count" id="mapCount">Memuat...</span>
+      <input type="text" class="form-input" id="mapSearch" placeholder="🔍 Cari nama produk atau lokasi...">
+      <span class="map-count" id="mapCount">Memuat data...</span>
     </div>
-    <div style="position: relative; flex: 1; min-height: 0;">
-      <div id="fullMap" style="height: 100%;"></div>
-      <div class="map-legend">
-        <h4>📍 Legenda</h4>
-        <div class="map-legend-item">
-          <div class="legend-dot" style="background: #2E7D32;"></div>
-          <span>Lokasi UMKM</span>
+
+    <!-- Map & Side Panel Wrapper -->
+    <div class="main-map-wrapper">
+      <!-- Area Peta -->
+      <div id="fullMap"></div>
+
+      <!-- Detail Panel (Google Maps Style) -->
+      <aside class="side-panel" id="sidePanel">
+        <button class="close-panel" id="closePanel" aria-label="Tutup Detail">&times;</button>
+        <div id="panelContent">
+          <!-- Data UMKM akan diisi oleh JavaScript di sini -->
+        </div>
+      </aside>
+
+      <!-- Legend Peta -->
+      <div class="map-legend" id="mapLegend">
+        <strong style="display:block; margin-bottom:8px;">Keterangan</strong>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="background:#2E7D32; width:12px; height:12px; border-radius:50%;"></div>
+          <span>Lokasi UMKM Banyuanyar</span>
         </div>
       </div>
     </div>
@@ -85,72 +200,156 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
+  
   <script>
     let map = null;
     let markers = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Init map
+      // 1. Inisialisasi Peta (Koordinat default Banyuanyar, Boyolali)
       const center = [-7.4300, 110.5900];
-      map = L.map('fullMap').setView(center, 13);
+      map = L.map('fullMap', { zoomControl: false }).setView(center, 14);
+      
+      L.control.zoom({ position: 'topleft' }).addTo(map);
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
-      // Load UMKM
+      // 2. Load Data UMKM Pertama Kali
       await loadMapMarkers();
 
-      // Search
-      let timeout;
+      // 3. Fitur Pencarian Dinamis
+      let searchTimeout;
       document.getElementById('mapSearch').addEventListener('input', (e) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => loadMapMarkers(e.target.value.trim()), 300);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          loadMapMarkers(e.target.value.trim());
+        }, 400);
+      });
+
+      // 4. Tutup Panel Detail
+      document.getElementById('closePanel').addEventListener('click', () => {
+        document.getElementById('sidePanel').classList.remove('active');
+        // Reset posisi legenda di mobile
+        if(window.innerWidth <= 768) {
+           document.getElementById('mapLegend').style.bottom = '25px';
+        }
       });
     });
 
-    async function loadMapMarkers(search) {
+    // Fungsi Mengambil dan Menampilkan Marker Peta
+    async function loadMapMarkers(search = '') {
       try {
         const result = await apiGetUmkmList(null, search);
         const items = result.data;
 
-        // Clear
+        // Bersihkan marker lama jika ada pencarian
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
         items.forEach(item => {
           if (!item.latitude || !item.longitude) return;
+
+          // Custom Icon untuk Marker Peta
           const icon = L.divIcon({
             className: 'custom-marker',
-            html: '<div style="background:#2E7D32;color:white;width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;"><span style="transform:rotate(45deg);font-size:16px;">📍</span></div>',
-            iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],
+            html: `
+              <div style="background:#2E7D32; color:white; width:36px; height:36px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,0.2); border:2px solid white;">
+                <span style="transform:rotate(45deg); font-size:16px;">🛍️</span>
+              </div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 36]
           });
 
-          const popup = `
-            <div style="font-family:Inter,sans-serif;min-width:200px;">
-              ${item.foto_url ? `<img src="${getImageUrl(item.foto_url)}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'">` : ''}
-              <h3 style="font-size:1rem;margin-bottom:4px;">${item.nama_produk}</h3>
-              <p style="color:#2E7D32;font-weight:700;">${item.harga || ''}</p>
-              <p style="font-size:0.8rem;color:#718096;">${item.kategori} · ${item.alamat || ''}</p>
-              <a href="umkm-detail.html?id=${item.id}" style="display:inline-block;padding:4px 12px;background:#2E7D32;color:white;border-radius:20px;font-size:0.8rem;margin-top:6px;text-decoration:none;">Detail →</a>
-            </div>
-          `;
+          const marker = L.marker([item.latitude, item.longitude], { icon }).addTo(map);
+          
+          // Trigger Panel Terbuka saat Marker diklik
+          marker.on('click', () => {
+            showSidePanel(item);
+            // Geser peta agar marker ada di tengah layaknya Google Maps
+            map.flyTo([item.latitude, item.longitude], 16, { animate: true, duration: 1 });
+          });
 
-          const marker = L.marker([item.latitude, item.longitude], { icon })
-            .addTo(map)
-            .bindPopup(popup, { maxWidth: 280, className: 'custom-popup' });
           markers.push(marker);
         });
 
+        // Update jumlah hasil
         document.getElementById('mapCount').textContent = `${items.length} UMKM ditemukan`;
 
-        if (markers.length > 1) {
-          map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1));
+        // Sesuaikan zoom agar semua marker terlihat (jika tidak sedang mencari spesifik)
+        if (markers.length > 0 && !search) {
+          const group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.1));
         }
+
       } catch (err) {
-        console.error('Error loading map data:', err);
+        console.error('Gagal memuat data peta:', err);
         document.getElementById('mapCount').textContent = 'Gagal memuat data';
       }
+    }
+
+    // Fungsi Menampilkan Detail UMKM ke dalam Panel
+    function showSidePanel(item) {
+      const panel = document.getElementById('sidePanel');
+      const content = document.getElementById('panelContent');
+      const legend = document.getElementById('mapLegend');
+      
+      panel.classList.add('active');
+      panel.scrollTop = 0; // Pastikan panel mulai dari paling atas
+
+      // Geser legenda ke atas jika di mobile agar tidak tertutup panel
+      if(window.innerWidth <= 768) {
+         legend.style.bottom = 'calc(65% + 15px)';
+      }
+
+      // Render data UMKM ke HTML
+      content.innerHTML = `
+        <img src="${getImageUrl(item.foto_url)}" class="panel-img" onerror="this.src='images/umkm-default.png'">
+        <div class="panel-body">
+          <span class="panel-category">${item.kategori}</span>
+          <h3 class="panel-title">${item.nama_produk}</h3>
+          <p class="panel-price">${item.harga || 'Harga Menyesuaikan'}</p>
+          
+          <div class="info-group">
+            <span class="info-label">📍 Lokasi & Alamat</span>
+            <p class="info-value">${item.alamat || 'Desa Banyuanyar, Boyolali'}</p>
+          </div>
+
+          <div class="info-group">
+            <span class="info-label">📝 Deskripsi Produk</span>
+            <p class="info-value">${item.deskripsi || 'Tidak ada deskripsi tersedia.'}</p>
+          </div>
+
+          <div class="info-group">
+            <span class="info-label">✨ Keunggulan</span>
+            <p class="info-value">${item.keunggulan || '-'}</p>
+          </div>
+
+          <div class="info-group">
+            <span class="info-label">📞 Kontak Penjual</span>
+            <p class="info-value">${item.kontak || '-'}</p>
+          </div>
+
+          <!-- Kumpulan Tombol Action -->
+          <div style="display: flex; gap: 12px; margin-top: 30px; margin-bottom: 20px;">
+            <a href="umkm-detail.html?id=${item.id}" class="btn btn-outline" style="flex: 1; text-align: center; text-decoration: none; padding: 12px 0; color: #2E7D32; border: 1.5px solid #2E7D32;">
+              📄 Detail Lengkap
+            </a>
+            <a href="https://wa.me/${formatPhone(item.kontak)}" target="_blank" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 12px 0; background: #2E7D32; color: white; border: none;">
+              💬 Hubungi WA
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Helper untuk merapikan format nomor WA (mengubah awalan 0 menjadi 62)
+    function formatPhone(phone) {
+      if (!phone) return '';
+      let cleaned = phone.replace(/\D/g, '');
+      if (cleaned.startsWith('0')) cleaned = '62' + cleaned.slice(1);
+      return cleaned;
     }
   </script>
 </body>

@@ -9,8 +9,9 @@
     }
 
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr); /* Tetap 3 kolom di tablet */
         gap: 24px;
+        max-width: 100%; /* Lepas batas lebar */
     }
 
     .umkm-grid {
@@ -100,7 +101,8 @@
     }
 
     .stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr; /* Tumpuk vertikal (1 kolom) agar rapi di layar kecil */
+        gap: 32px;
     }
 
     .umkm-grid {

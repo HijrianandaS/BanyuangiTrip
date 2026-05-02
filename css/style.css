@@ -587,8 +587,10 @@ p {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* Ubah dari 4 menjadi 3 kolom */
   gap: var(--gap-lg);
+  max-width: 900px; /* Batasi lebar maksimal agar jaraknya tidak terlalu merenggang */
+  margin: 0 auto;   /* Pusatkan seluruh grid tepat di tengah layar */
 }
 
 .stat-item {
