@@ -51,10 +51,14 @@ app.use((err, req, res, next) => {
 async function start() {
   await testConnection();
 
-  app.listen(PORT, () => {
+  // Railway requires 0.0.0.0 binding
+  const HOST = '0.0.0.0';
+
+  app.listen(PORT, HOST, () => {
     console.log('');
     console.log('🌿 =============================================');
     console.log('   Desa Banyuanyar — Server Running');
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log('   =============================================');
     console.log(`   🌐 Frontend : http://localhost:${PORT}`);
     console.log(`   📡 API      : http://localhost:${PORT}/api`);
@@ -63,5 +67,11 @@ async function start() {
     console.log('');
   });
 }
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received. Shutting down gracefully...');
+  process.exit(0);
+});
 
 start();

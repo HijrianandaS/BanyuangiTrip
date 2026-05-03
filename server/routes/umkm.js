@@ -1,5 +1,7 @@
 /* ===================================================
    UMKM ROUTES — CRUD API Endpoints
+   Uses Cloudinary for image uploads in production,
+   falls back to local disk storage in development.
    =================================================== */
 const express = require('express');
 const multer = require('multer');
@@ -10,36 +12,83 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// --- Multer config for image upload ---
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '..', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, uniqueName + ext);
-  },
-});
+// --- Upload config: Cloudinary (production) or disk (local dev) ---
+let upload;
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    if (ext && mime) {
-      cb(null, true);
-    } else {
-      cb(new Error('Hanya file gambar (jpg, png, gif, webp) yang diizinkan.'));
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  // Production: use Cloudinary
+  const { cloudinary, storage } = require('../config/cloudinary');
+  upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+  console.log('📷 Upload mode: Cloudinary');
+} else {
+  // Local dev: use disk storage
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(__dirname, '..', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueName + ext);
+    },
+  });
+
+  upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+    fileFilter: (req, file, cb) => {
+      const allowed = /jpeg|jpg|png|gif|webp/;
+      const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+      const mime = allowed.test(file.mimetype);
+      if (ext && mime) {
+        cb(null, true);
+      } else {
+        cb(new Error('Hanya file gambar (jpg, png, gif, webp) yang diizinkan.'));
+      }
+    },
+  });
+  console.log('📷 Upload mode: Local disk');
+}
+
+// Helper: get foto URL from uploaded file
+function getFotoUrl(file) {
+  if (!file) return null;
+  // Cloudinary returns full URL in file.path
+  if (file.path && file.path.startsWith('http')) {
+    return file.path;
+  }
+  // Local disk: return relative path
+  return '/uploads/' + file.filename;
+}
+
+// Helper: delete image (Cloudinary or local)
+async function deleteImage(fotoUrl) {
+  if (!fotoUrl) return;
+
+  if (fotoUrl.startsWith('http') && fotoUrl.includes('cloudinary')) {
+    // Delete from Cloudinary
+    try {
+      const { cloudinary } = require('../config/cloudinary');
+      // Extract public_id from Cloudinary URL
+      const parts = fotoUrl.split('/');
+      const folderAndFile = parts.slice(-2).join('/'); // e.g. "banyuanyar-umkm/abc123"
+      const publicId = folderAndFile.replace(/\.[^/.]+$/, ''); // remove extension
+      await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+      console.error('Failed to delete from Cloudinary:', err.message);
     }
-  },
-});
+  } else {
+    // Delete from local disk
+    const filePath = path.join(__dirname, '..', fotoUrl);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+}
 
 // =============================================
 // PUBLIC ROUTES (tanpa auth)
@@ -108,11 +157,7 @@ router.post('/', authMiddleware, upload.single('foto'), async (req, res) => {
       return res.status(400).json({ error: 'Kategori dan nama produk wajib diisi.' });
     }
 
-    // Build foto_url from uploaded file
-    let foto_url = null;
-    if (req.file) {
-      foto_url = '/uploads/' + req.file.filename;
-    }
+    const foto_url = getFotoUrl(req.file);
 
     const [result] = await pool.execute(
       `INSERT INTO umkm (kategori, nama_produk, deskripsi, harga, alamat, kontak, keunggulan, foto_url, latitude, longitude) 
@@ -159,14 +204,9 @@ router.put('/:id', authMiddleware, upload.single('foto'), async (req, res) => {
     // Handle foto
     let foto_url = existing[0].foto_url;
     if (req.file) {
-      // Delete old file if exists
-      if (existing[0].foto_url) {
-        const oldPath = path.join(__dirname, '..', existing[0].foto_url);
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
-        }
-      }
-      foto_url = '/uploads/' + req.file.filename;
+      // Delete old image
+      await deleteImage(existing[0].foto_url);
+      foto_url = getFotoUrl(req.file);
     }
 
     await pool.execute(
@@ -213,13 +253,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'UMKM tidak ditemukan.' });
     }
 
-    // Delete uploaded foto
-    if (existing[0].foto_url) {
-      const fotoPath = path.join(__dirname, '..', existing[0].foto_url);
-      if (fs.existsSync(fotoPath)) {
-        fs.unlinkSync(fotoPath);
-      }
-    }
+    // Delete uploaded foto (Cloudinary or local)
+    await deleteImage(existing[0].foto_url);
 
     await pool.execute('DELETE FROM umkm WHERE id = ?', [id]);
 
