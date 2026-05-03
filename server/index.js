@@ -5,11 +5,31 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
-const { testConnection } = require('./config/database');
+const { testConnection, pool } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const umkmRoutes = require('./routes/umkm');
+
+// --- Auto-seed admin user if none exists ---
+async function autoSeedAdmin() {
+  try {
+    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM users');
+    if (rows[0].count === 0) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await pool.execute(
+        'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+        ['admin', hashedPassword, 'admin']
+      );
+      console.log('🌱 Auto-seed: Admin user created (admin / admin123)');
+    } else {
+      console.log('👤 Admin user already exists, skipping seed.');
+    }
+  } catch (err) {
+    console.error('⚠️ Auto-seed warning:', err.message);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +70,7 @@ app.use((err, req, res, next) => {
 // --- Start Server ---
 async function start() {
   await testConnection();
+  await autoSeedAdmin();
 
   // Railway requires 0.0.0.0 binding
   const HOST = '0.0.0.0';
