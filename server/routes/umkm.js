@@ -230,21 +230,29 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/stats — Dashboard statistics
+
+// File: server/routes/umkm.js
 router.get('/stats/summary', async (req, res) => {
   try {
-    const [total] = await pool.execute('SELECT COUNT(*) as count FROM umkm');
-    const [mandiri] = await pool.execute("SELECT COUNT(*) as count FROM umkm WHERE kategori = 'MANDIRI'");
-    const [induk] = await pool.execute("SELECT COUNT(*) as count FROM umkm WHERE kategori = 'INDUK'");
+    const [rows] = await pool.execute(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN kategori = 'MANDIRI' THEN 1 ELSE 0 END) as mandiri,
+        SUM(CASE WHEN kategori = 'INDUK' THEN 1 ELSE 0 END) as induk
+      FROM umkm
+    `);
 
     res.json({
-      total_umkm: total[0].count,
-      total_mandiri: mandiri[0].count,
-      total_induk: induk[0].count,
+      success: true, // Tambahkan ini
+      data: {        // Bungkus dalam data agar seragam dengan API lainnya
+        total: parseInt(rows[0].total) || 0,
+        mandiri: parseInt(rows[0].mandiri) || 0,
+        induk: parseInt(rows[0].induk) || 0
+      }
     });
   } catch (err) {
-    console.error('Stats error:', err);
-    res.status(500).json({ error: 'Gagal mengambil statistik.' });
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Gagal ambil statistik' });
   }
 });
 

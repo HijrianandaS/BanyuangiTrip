@@ -2,7 +2,8 @@
    API CLIENT — Helper untuk fetch ke backend API
    =================================================== */
 
-const API_BASE = '/api';
+// js/api.js
+const API_BASE = 'http://localhost:3000/api'; // Pastikan port sesuai dengan server
 
 // --- Generic fetch wrapper ---
 async function apiFetch(endpoint, options = {}) {

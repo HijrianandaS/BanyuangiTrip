@@ -2,11 +2,42 @@
    MAIN APP — Navbar, Animations, Stats Counter
    =================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+// js/app.js
+document.addEventListener('DOMContentLoaded', async () => {
     initNavbar();
     initScrollAnimations();
-    initStatsCounter();
+    
+    // Pastikan elemen statistik ada di halaman ini
+    const statEl = document.getElementById('stat-total');
+    
+    if (statEl) {
+        // 1. Ambil data dari database sampai SELESAI
+        await loadDynamicStats(); 
+        
+        // 2. BARU jalankan animasi angka setelah targetnya berubah dari 0 ke angka asli
+        initStatsCounter(); 
+    }
 });
+
+// --- Fetch Dynamic Stats dari API ---
+async function loadDynamicStats() {
+    try {
+        const response = await apiGetStats();
+        console.log("Cek Response:", response); // Untuk debugging
+
+        // Sesuaikan dengan isi console kamu yang muncul di gambar
+        if (response) {
+            document.getElementById('stat-total').setAttribute('data-target', response.total_umkm || 0);
+            document.getElementById('stat-mandiri').setAttribute('data-target', response.total_mandiri || 0);
+            document.getElementById('stat-induk').setAttribute('data-target', response.total_induk || 0);
+            
+            // Jalankan animasi
+            initStatsCounter();
+        }
+    } catch (error) {
+        console.error('Gagal memuat statistik:', error);
+    }
+}
 
 // --- Navbar Scroll Effect ---
 function initNavbar() {
@@ -85,10 +116,10 @@ function initStatsCounter() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 animateCounter(entry.target);
-                observer.unobserve(entry.target);
+                observer.unobserve(entry.target); // Animasi hanya berjalan 1 kali
             }
         });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.5 }); // Mulai animasi saat elemen 50% terlihat di layar
 
     statNumbers.forEach(el => observer.observe(el));
 }
@@ -106,8 +137,12 @@ function animateCounter(el) {
         const eased = 1 - Math.pow(1 - progress, 3);
         const current = Math.floor(eased * target);
         el.textContent = current.toLocaleString('id-ID') + suffix;
+        
         if (progress < 1) {
             requestAnimationFrame(update);
+        } else {
+            // Pastikan angka akhir tepat dengan target
+            el.textContent = target.toLocaleString('id-ID') + suffix; 
         }
     }
 
@@ -157,15 +192,20 @@ function showDeleteModal(umkmId, umkmName) {
     });
 
     document.getElementById('confirmDelete').addEventListener('click', () => {
-        deleteUmkm(umkmId);
+        deleteUmkm(umkmId); // Asumsi fungsi ini ada di script halaman spesifik
         overlay.remove();
         showToast('UMKM berhasil dihapus!', 'success');
+        
         // Refresh the page or list
         if (window.location.pathname.includes('umkm-detail')) {
             window.location.href = 'umkm.html';
         } else {
-            renderUmkmCards('umkm-container');
-            initScrollAnimations();
+            if(typeof renderUmkmCards === 'function') {
+                renderUmkmCards('umkm-container');
+                initScrollAnimations();
+            } else {
+                window.location.reload();
+            }
         }
     });
 
