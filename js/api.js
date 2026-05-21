@@ -3,7 +3,7 @@
    =================================================== */
 
 // js/api.js
-const API_BASE = 'http://localhost:3000/api'; // Pastikan port sesuai dengan server
+const API_BASE = 'http://localhost:4000/api'; // Pastikan port sesuai dengan server
 
 // --- Generic fetch wrapper ---
 async function apiFetch(endpoint, options = {}) {

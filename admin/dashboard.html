@@ -219,9 +219,9 @@
       try {
         // Load stats
         const stats = await apiGetStats();
-        document.getElementById('statTotal').textContent = stats.total_umkm;
-        document.getElementById('statMandiri').textContent = stats.total_mandiri;
-        document.getElementById('statInduk').textContent = stats.total_induk;
+        document.getElementById('statTotal').textContent = stats.data.total;
+        document.getElementById('statMandiri').textContent = stats.data.mandiri;
+        document.getElementById('statInduk').textContent = stats.data.induk;
       } catch (err) {
         console.error('Error loading stats:', err);
       }

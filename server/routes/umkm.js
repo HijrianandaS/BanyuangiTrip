@@ -12,6 +12,28 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
+// --- Batas Wilayah Desa Banyuanyar, Kecamatan Ampel, Boyolali ---
+// Bounding box ~3km radius dari pusat desa
+const BANYUANYAR_BOUNDS = {
+  latMin: -7.4550,   // Batas selatan
+  latMax: -7.4050,   // Batas utara
+  lngMin: 110.5650,  // Batas barat
+  lngMax: 110.6150,  // Batas timur
+};
+
+function isInsideBanyuanyar(lat, lng) {
+  if (lat === null || lng === null || lat === undefined || lng === undefined) return true; // Koordinat opsional
+  const latNum = parseFloat(lat);
+  const lngNum = parseFloat(lng);
+  if (isNaN(latNum) || isNaN(lngNum)) return true; // Biarkan lolos jika bukan angka valid
+  return (
+    latNum >= BANYUANYAR_BOUNDS.latMin &&
+    latNum <= BANYUANYAR_BOUNDS.latMax &&
+    lngNum >= BANYUANYAR_BOUNDS.lngMin &&
+    lngNum <= BANYUANYAR_BOUNDS.lngMax
+  );
+}
+
 // --- Upload config: Cloudinary (production) or disk (local dev) ---
 let upload;
 
@@ -157,6 +179,13 @@ router.post('/', authMiddleware, upload.single('foto'), async (req, res) => {
       return res.status(400).json({ error: 'Kategori dan nama produk wajib diisi.' });
     }
 
+    // Validasi koordinat harus di wilayah Banyuanyar
+    if (latitude && longitude && !isInsideBanyuanyar(latitude, longitude)) {
+      return res.status(400).json({ 
+        error: 'Koordinat di luar wilayah Desa Banyuanyar. Pastikan lokasi berada di sekitar Desa Banyuanyar, Kecamatan Ampel, Boyolali.' 
+      });
+    }
+
     const foto_url = getFotoUrl(req.file);
 
     const [result] = await pool.execute(
@@ -199,6 +228,13 @@ router.put('/:id', authMiddleware, upload.single('foto'), async (req, res) => {
     const [existing] = await pool.execute('SELECT * FROM umkm WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'UMKM tidak ditemukan.' });
+    }
+
+    // Validasi koordinat harus di wilayah Banyuanyar
+    if (latitude && longitude && !isInsideBanyuanyar(latitude, longitude)) {
+      return res.status(400).json({ 
+        error: 'Koordinat di luar wilayah Desa Banyuanyar. Pastikan lokasi berada di sekitar Desa Banyuanyar, Kecamatan Ampel, Boyolali.' 
+      });
     }
 
     // Handle foto

@@ -7,6 +7,8 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/responsive.css">
+  <!-- Leaflet CSS for map picker -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     .admin-layout { display: flex; min-height: 100vh; }
     .sidebar {
@@ -47,6 +49,39 @@
       .admin-body { padding: 16px; }
       .admin-header { padding: 16px; }
     }
+
+    /* Map Picker */
+    .map-picker-container {
+      margin-top: 12px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      transition: border-color 0.3s ease;
+    }
+    .map-picker-container.invalid { border-color: #e53e3e; }
+    .map-picker-container.valid { border-color: #2E7D32; }
+    #mapPicker { height: 300px; width: 100%; cursor: crosshair; }
+    
+    .coord-status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+      margin-top: 8px; transition: all 0.3s ease;
+    }
+    .coord-status.valid { background: #E8F5E9; color: #2E7D32; }
+    .coord-status.invalid { background: #FFF5F5; color: #e53e3e; }
+    .coord-status.neutral { background: #f7fafc; color: #718096; }
+
+    .boundary-info {
+      background: linear-gradient(135deg, #f0fff4, #e8f5e9);
+      border: 1px solid #c6f6d5;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: #2d3748;
+      line-height: 1.5;
+    }
+    .boundary-info strong { color: #2E7D32; }
   </style>
 </head>
 <body>
@@ -142,23 +177,34 @@
               <img id="fotoPreview" class="image-current" style="display: none;" alt="Preview">
             </div>
 
-            <!-- Koordinat -->
+            <!-- Koordinat + Map Picker -->
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="latitude">Latitude</label>
-                <input type="number" class="form-input" id="latitude" placeholder="-7.4300" step="any">
+                <input type="number" class="form-input" id="latitude" placeholder="-7.4300" step="any" oninput="validateCoordinates()">
               </div>
               <div class="form-group">
                 <label class="form-label" for="longitude">Longitude</label>
-                <input type="number" class="form-input" id="longitude" placeholder="110.5900" step="any">
+                <input type="number" class="form-input" id="longitude" placeholder="110.5900" step="any" oninput="validateCoordinates()">
               </div>
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -12px; margin-bottom: 24px;">
-              💡 Buka Google Maps → klik kanan lokasi → salin koordinat.
-            </p>
+            
+            <!-- Status Koordinat -->
+            <div class="coord-status neutral" id="coordStatus">
+              📍 Klik pada peta di bawah untuk memilih lokasi, atau masukkan koordinat secara manual.
+            </div>
+
+            <!-- Map Picker -->
+            <div class="map-picker-container" id="mapPickerContainer">
+              <div id="mapPicker"></div>
+            </div>
+            <div class="boundary-info">
+              ⚠️ <strong>Catatan:</strong> Lokasi hanya bisa dipilih di wilayah <strong>Desa Banyuanyar</strong>, Kecamatan Ampel, Boyolali.
+              Area di luar batas hijau tidak bisa dipilih.
+            </div>
 
             <!-- Submit -->
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
               <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">💾 Simpan UMKM</button>
               <a href="dashboard.html" class="btn btn-secondary btn-lg">Batal</a>
             </div>
@@ -168,6 +214,7 @@
     </main>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="../js/api.js"></script>
   <script>
     // Auth guard
@@ -177,6 +224,19 @@
     if (user) document.getElementById('currentUser').textContent = '👤 ' + user.username;
 
     let editId = null;
+    let pickerMap = null;
+    let pickerMarker = null;
+
+    // --- Batas Wilayah Desa Banyuanyar ---
+    const BOUNDS = {
+      latMin: -7.4550, latMax: -7.4050,
+      lngMin: 110.5650, lngMax: 110.6150,
+    };
+
+    function isInsideBounds(lat, lng) {
+      return lat >= BOUNDS.latMin && lat <= BOUNDS.latMax &&
+             lng >= BOUNDS.lngMin && lng <= BOUNDS.lngMax;
+    }
 
     function toggleKeunggulan() {
       const kat = document.getElementById('kategori').value;
@@ -194,6 +254,129 @@
         img.style.display = 'block';
       };
       reader.readAsDataURL(file);
+    }
+
+    // --- Validasi Koordinat Real-time ---
+    function validateCoordinates() {
+      const latVal = document.getElementById('latitude').value;
+      const lngVal = document.getElementById('longitude').value;
+      const statusEl = document.getElementById('coordStatus');
+      const container = document.getElementById('mapPickerContainer');
+
+      if (!latVal && !lngVal) {
+        statusEl.className = 'coord-status neutral';
+        statusEl.innerHTML = '📍 Klik pada peta di bawah untuk memilih lokasi, atau masukkan koordinat secara manual.';
+        container.className = 'map-picker-container';
+        return true;
+      }
+
+      const lat = parseFloat(latVal);
+      const lng = parseFloat(lngVal);
+
+      if (isNaN(lat) || isNaN(lng)) {
+        statusEl.className = 'coord-status neutral';
+        statusEl.innerHTML = '📍 Masukkan kedua koordinat (latitude & longitude).';
+        container.className = 'map-picker-container';
+        return true;
+      }
+
+      if (isInsideBounds(lat, lng)) {
+        statusEl.className = 'coord-status valid';
+        statusEl.innerHTML = `✅ Lokasi valid — berada di wilayah Desa Banyuanyar (${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+        container.className = 'map-picker-container valid';
+        // Update marker di map
+        updatePickerMarker(lat, lng);
+        return true;
+      } else {
+        statusEl.className = 'coord-status invalid';
+        statusEl.innerHTML = '❌ Lokasi di luar wilayah Desa Banyuanyar! Silakan pilih lokasi di dalam area hijau pada peta.';
+        container.className = 'map-picker-container invalid';
+        return false;
+      }
+    }
+
+    function updatePickerMarker(lat, lng) {
+      if (!pickerMap) return;
+      if (pickerMarker) {
+        pickerMarker.setLatLng([lat, lng]);
+      } else {
+        pickerMarker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background:#2E7D32; color:white; width:36px; height:36px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,0.2); border:2px solid white;"><span style="transform:rotate(45deg); font-size:16px;">📍</span></div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+          })
+        }).addTo(pickerMap);
+      }
+      pickerMap.setView([lat, lng], 16, { animate: true });
+    }
+
+    // --- Inisialisasi Map Picker ---
+    function initMapPicker() {
+      const center = [-7.4300, 110.5900];
+      pickerMap = L.map('mapPicker', { zoomControl: true }).setView(center, 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(pickerMap);
+
+      // Gambar batas wilayah Banyuanyar (rectangle hijau)
+      const bounds = [[BOUNDS.latMin, BOUNDS.lngMin], [BOUNDS.latMax, BOUNDS.lngMax]];
+      L.rectangle(bounds, {
+        color: '#2E7D32',
+        weight: 2,
+        fillColor: '#2E7D32',
+        fillOpacity: 0.08,
+        dashArray: '8, 4',
+        interactive: false,
+      }).addTo(pickerMap);
+
+      // Label batas
+      L.marker([BOUNDS.latMax, (BOUNDS.lngMin + BOUNDS.lngMax) / 2], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="background:rgba(46,125,50,0.9);color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2);">🏘️ Batas Wilayah Desa Banyuanyar</div>',
+          iconSize: null,
+          iconAnchor: [120, 20],
+        }),
+        interactive: false,
+      }).addTo(pickerMap);
+
+      // Klik pada peta untuk pilih lokasi
+      pickerMap.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+
+        if (isInsideBounds(lat, lng)) {
+          document.getElementById('latitude').value = lat.toFixed(6);
+          document.getElementById('longitude').value = lng.toFixed(6);
+          updatePickerMarker(lat, lng);
+          validateCoordinates();
+        } else {
+          // Flash efek merah pada container
+          const container = document.getElementById('mapPickerContainer');
+          container.className = 'map-picker-container invalid';
+          const statusEl = document.getElementById('coordStatus');
+          statusEl.className = 'coord-status invalid';
+          statusEl.innerHTML = '❌ Area itu di luar wilayah Desa Banyuanyar! Klik di dalam area hijau.';
+          
+          setTimeout(() => {
+            if (!document.getElementById('latitude').value) {
+              container.className = 'map-picker-container';
+              statusEl.className = 'coord-status neutral';
+              statusEl.innerHTML = '📍 Klik pada peta di bawah untuk memilih lokasi, atau masukkan koordinat secara manual.';
+            }
+          }, 2500);
+        }
+      });
+
+      // Jika sudah ada koordinat (mode edit), pasang marker
+      const latVal = document.getElementById('latitude').value;
+      const lngVal = document.getElementById('longitude').value;
+      if (latVal && lngVal) {
+        updatePickerMarker(parseFloat(latVal), parseFloat(lngVal));
+        validateCoordinates();
+      }
     }
 
     // Check edit mode
@@ -232,11 +415,27 @@
           window.location.href = 'dashboard.html';
         }
       }
+
+      // Inisialisasi Map Picker setelah form terisi
+      initMapPicker();
     });
 
-    // Form submit
+    // Form submit dengan validasi koordinat
     document.getElementById('umkmForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      // Validasi koordinat sebelum submit
+      const latVal = document.getElementById('latitude').value;
+      const lngVal = document.getElementById('longitude').value;
+      if (latVal && lngVal) {
+        const lat = parseFloat(latVal);
+        const lng = parseFloat(lngVal);
+        if (!isNaN(lat) && !isNaN(lng) && !isInsideBounds(lat, lng)) {
+          alert('❌ Koordinat di luar wilayah Desa Banyuanyar!\n\nPastikan lokasi berada di dalam area hijau pada peta.');
+          return;
+        }
+      }
+
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.textContent = '⏳ Menyimpan...';

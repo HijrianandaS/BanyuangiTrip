@@ -136,6 +136,17 @@
         let editId = null;
         let imageData = 'images/umkm-default.png';
 
+        // Batas Wilayah Desa Banyuanyar
+        const BANYUANYAR_BOUNDS = {
+            latMin: -7.4550, latMax: -7.4050,
+            lngMin: 110.5650, lngMax: 110.6150,
+        };
+
+        function isInsideBanyuanyar(lat, lng) {
+            return lat >= BANYUANYAR_BOUNDS.latMin && lat <= BANYUANYAR_BOUNDS.latMax &&
+                   lng >= BANYUANYAR_BOUNDS.lngMin && lng <= BANYUANYAR_BOUNDS.lngMax;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             editId = params.get('id');
@@ -200,13 +211,25 @@
                 deskripsi: document.getElementById('deskripsi').value.trim(),
                 keunggulan: document.getElementById('keunggulan').value.trim(),
                 gambar: imageData,
-                lat: parseFloat(document.getElementById('lat').value) || -8.2192 + (Math.random() * 0.05 - 0.025),
-                lng: parseFloat(document.getElementById('lng').value) || 114.3691 + (Math.random() * 0.05 - 0.025),
+                lat: parseFloat(document.getElementById('lat').value) || null,
+                lng: parseFloat(document.getElementById('lng').value) || null,
             };
 
             if (!data.nama || !data.harga || !data.jenisProduk || !data.deskripsi || !data.keunggulan) {
                 showToast('Mohon lengkapi semua field yang wajib!', 'error');
                 return;
+            }
+
+            // Validasi koordinat: harus di wilayah Banyuanyar
+            if (data.lat !== null && data.lng !== null && !isInsideBanyuanyar(data.lat, data.lng)) {
+                showToast('Koordinat di luar wilayah Desa Banyuanyar! Pastikan lokasi di sekitar Banyuanyar.', 'error');
+                return;
+            }
+
+            // Jika koordinat kosong, gunakan default di dalam Banyuanyar
+            if (data.lat === null || data.lng === null) {
+                data.lat = -7.4300 + (Math.random() * 0.02 - 0.01);
+                data.lng = 110.5900 + (Math.random() * 0.02 - 0.01);
             }
 
             if (editId) {

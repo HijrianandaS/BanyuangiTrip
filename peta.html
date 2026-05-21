@@ -205,15 +205,47 @@
     let map = null;
     let markers = [];
 
+    // Batas Wilayah Desa Banyuanyar
+    const BANYUANYAR_BOUNDS = {
+      latMin: -7.4550, latMax: -7.4050,
+      lngMin: 110.5650, lngMax: 110.6150,
+    };
+
     document.addEventListener('DOMContentLoaded', async () => {
       // 1. Inisialisasi Peta (Koordinat default Banyuanyar, Boyolali)
       const center = [-7.4300, 110.5900];
-      map = L.map('fullMap', { zoomControl: false }).setView(center, 14);
+      
+      // Batas scroll peta agar tidak bisa keluar jauh dari Banyuanyar
+      const maxBounds = L.latLngBounds(
+        [BANYUANYAR_BOUNDS.latMin - 0.03, BANYUANYAR_BOUNDS.lngMin - 0.03],
+        [BANYUANYAR_BOUNDS.latMax + 0.03, BANYUANYAR_BOUNDS.lngMax + 0.03]
+      );
+
+      map = L.map('fullMap', { 
+        zoomControl: false,
+        maxBounds: maxBounds,
+        maxBoundsViscosity: 0.8,
+        minZoom: 12,
+      }).setView(center, 14);
       
       L.control.zoom({ position: 'topleft' }).addTo(map);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Tampilkan batas wilayah Banyuanyar
+      const bounds = [
+        [BANYUANYAR_BOUNDS.latMin, BANYUANYAR_BOUNDS.lngMin], 
+        [BANYUANYAR_BOUNDS.latMax, BANYUANYAR_BOUNDS.lngMax]
+      ];
+      L.rectangle(bounds, {
+        color: '#2E7D32',
+        weight: 2,
+        fillColor: '#2E7D32',
+        fillOpacity: 0.05,
+        dashArray: '8, 4',
+        interactive: false,
       }).addTo(map);
 
       // 2. Load Data UMKM Pertama Kali

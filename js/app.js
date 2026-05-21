@@ -25,14 +25,11 @@ async function loadDynamicStats() {
         const response = await apiGetStats();
         console.log("Cek Response:", response); // Untuk debugging
 
-        // Sesuaikan dengan isi console kamu yang muncul di gambar
-        if (response) {
-            document.getElementById('stat-total').setAttribute('data-target', response.total_umkm || 0);
-            document.getElementById('stat-mandiri').setAttribute('data-target', response.total_mandiri || 0);
-            document.getElementById('stat-induk').setAttribute('data-target', response.total_induk || 0);
-            
-            // Jalankan animasi
-            initStatsCounter();
+        // API mengembalikan: { success: true, data: { total, mandiri, induk } }
+        if (response && response.data) {
+            document.getElementById('stat-total').setAttribute('data-target', response.data.total || 0);
+            document.getElementById('stat-mandiri').setAttribute('data-target', response.data.mandiri || 0);
+            document.getElementById('stat-induk').setAttribute('data-target', response.data.induk || 0);
         }
     } catch (error) {
         console.error('Gagal memuat statistik:', error);
