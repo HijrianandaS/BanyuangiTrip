@@ -1,0 +1,24 @@
+# =============================================
+# API URL REWRITE RULES
+# Desa Banyuanyar - PHP API
+# =============================================
+RewriteEngine On
+
+# Pass Authorization header (important for shared hosting)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Route /api/umkm/stats/summary to umkm.php?action=stats
+RewriteRule ^umkm/stats/summary$ umkm.php?action=stats [L,QSA]
+
+# Route /api/umkm/{id} to umkm.php?id={id}
+RewriteRule ^umkm/([0-9]+)$ umkm.php?id=$1 [L,QSA]
+
+# Route /api/umkm to umkm.php
+RewriteRule ^umkm$ umkm.php [L,QSA]
+
+# Route /api/auth/login to auth.php
+RewriteRule ^auth/login$ auth.php [L,QSA]
+
+# Route /api/health to health.php
+RewriteRule ^health$ health.php [L,QSA]

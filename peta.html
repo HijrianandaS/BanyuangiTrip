@@ -207,13 +207,13 @@
 
     // Batas Wilayah Desa Banyuanyar
     const BANYUANYAR_BOUNDS = {
-      latMin: -7.4550, latMax: -7.4050,
-      lngMin: 110.5650, lngMax: 110.6150,
+      latMin: -7.5000, latMax: -7.4050,
+      lngMin: 110.5400, lngMax: 110.6150,
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
       // 1. Inisialisasi Peta (Koordinat default Banyuanyar, Boyolali)
-      const center = [-7.4300, 110.5900];
+      const center = [-7.4525, 110.5775];
       
       // Batas scroll peta agar tidak bisa keluar jauh dari Banyuanyar
       const maxBounds = L.latLngBounds(
@@ -225,8 +225,8 @@
         zoomControl: false,
         maxBounds: maxBounds,
         maxBoundsViscosity: 0.8,
-        minZoom: 12,
-      }).setView(center, 14);
+        minZoom: 11,
+      }).setView(center, 13);
       
       L.control.zoom({ position: 'topleft' }).addTo(map);
 

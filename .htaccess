@@ -1,0 +1,48 @@
+# =============================================
+# ROOT HTACCESS
+# Desa Banyuanyar - Shared Hosting Configuration
+# =============================================
+RewriteEngine On
+
+# Pass Authorization header to PHP (shared hosting fix)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# =============================================
+# SECURITY: Block access to sensitive files
+# =============================================
+
+# Block access to .env files
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to config files directly
+<FilesMatch "^config\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to seed.php after initial setup (uncomment after seeding)
+# <FilesMatch "^seed\.php$">
+#     Order allow,deny
+#     Deny from all
+# </FilesMatch>
+
+# Block access to backup folder
+<IfModule mod_rewrite.c>
+    RewriteRule ^_backup_nodejs/ - [F,L]
+</IfModule>
+
+# =============================================
+# UPLOADS DIRECTORY: Only allow image files
+# =============================================
+<IfModule mod_rewrite.c>
+    RewriteRule ^uploads/.*\.php$ - [F,L]
+</IfModule>
+
+# =============================================
+# ERROR PAGES (optional)
+# =============================================
+ErrorDocument 404 /index.html

@@ -1,9 +1,23 @@
 /* ===================================================
-   API CLIENT — Helper untuk fetch ke backend API
+   API CLIENT — Helper untuk fetch ke backend PHP API
+   Desa Banyuanyar — Shared Hosting Version
    =================================================== */
 
-// js/api.js
-const API_BASE = 'http://localhost:4000/api'; // Pastikan port sesuai dengan server
+// Base URL: auto-detect subfolder
+// Production (root domain): API_BASE = "/api"
+// XAMPP lokal (/banyuanyar/): API_BASE = "/banyuanyar/api"
+const API_BASE = (() => {
+  // Cari <base> tag atau deteksi dari path halaman saat ini
+  const path = window.location.pathname;
+  // Cari folder project dari URL (misal /banyuanyar/index.html → /banyuanyar)
+  // Ini bekerja karena semua halaman ada di root project
+  const htmlFile = path.match(/\/[^\/]*\.html$/);
+  const basePath = htmlFile ? path.substring(0, path.lastIndexOf('/')) : path.replace(/\/$/, '');
+  // Jika kita di subfolder admin (misal /banyuanyar/admin/), naik 1 level
+  const adminMatch = basePath.match(/^(.*)\/admin$/);
+  const projectBase = adminMatch ? adminMatch[1] : basePath;
+  return projectBase + '/api';
+})();
 
 // --- Generic fetch wrapper ---
 async function apiFetch(endpoint, options = {}) {
@@ -57,8 +71,11 @@ async function apiCreateUmkm(formData) {
 }
 
 async function apiUpdateUmkm(id, formData) {
+  // Shared hosting may not support PUT natively
+  // Use POST with _method=PUT override
+  formData.append('_method', 'PUT');
   return apiFetch('/umkm/' + id, {
-    method: 'PUT',
+    method: 'POST',
     body: formData,
   });
 }
@@ -89,7 +106,14 @@ async function apiLogin(username, password) {
 function apiLogout() {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('auth_user');
-  window.location.href = '/admin/login.html';
+  // Redirect ke login page (relative to current page)
+  const path = window.location.pathname;
+  const adminMatch = path.match(/^(.*)\/admin\//);
+  if (adminMatch) {
+    window.location.href = adminMatch[0] + 'login.html';
+  } else {
+    window.location.href = 'admin/login.html';
+  }
 }
 
 function isLoggedIn() {

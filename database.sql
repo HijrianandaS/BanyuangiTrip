@@ -1,9 +1,15 @@
 -- =============================================
 -- DATABASE: banyuanyar_trip
 -- Sistem Informasi Peta Digital UMKM Desa Banyuanyar
+-- 
+-- Gunakan phpMyAdmin di cPanel untuk import file ini,
+-- atau jalankan seed.php yang akan membuat tabel otomatis.
 -- =============================================
 
-CREATE DATABASE IF NOT EXISTS banyuanyar_trip;
+CREATE DATABASE IF NOT EXISTS banyuanyar_trip
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE banyuanyar_trip;
 
 -- Tabel Users (Admin)
@@ -13,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'admin',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Tabel UMKM (Data Peta & Produk)
 CREATE TABLE IF NOT EXISTS umkm (
@@ -30,4 +36,4 @@ CREATE TABLE IF NOT EXISTS umkm (
     longitude DECIMAL(11, 8),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

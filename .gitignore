@@ -1,4 +1,14 @@
+# Node.js backup (tidak diperlukan di production)
+_backup_nodejs/
 node_modules/
+
+# Environment
 .env
-server/uploads/*
-!server/uploads/.gitkeep
+
+# Uploads (user content, jangan commit)
+uploads/*
+!uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
